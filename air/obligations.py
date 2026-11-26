@@ -9,6 +9,7 @@ class Obligation:
     end: int
     duration: int
     progress: str = 'pending'
+    role: str = 'promise'
 
 
 def add_obligation(connection, outcome):

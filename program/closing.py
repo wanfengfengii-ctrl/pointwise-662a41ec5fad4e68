@@ -1,5 +1,6 @@
 from air.obligations import read_pending_obligations
 from air.state import read_cursor
+from program.cues import read_armed_cue
 from program.database import conflict, write_transaction
 from program.opening import read_session, session_is_open
 from review.final_report import finalize_report
@@ -11,7 +12,13 @@ def close(database, session_id):
         report_id = session_id
         if session_is_open(session):
             cursor = read_cursor(connection, session_id)
-            if cursor.active is not None or read_pending_obligations(connection, session_id):
+            cue = read_armed_cue(connection, session_id)
+            cue_unfinished = (
+                cue is not None and cue.arm_status == 'armed'
+                and (cue.result is None or not cue.fulfilled)
+            )
+            if (cursor.active is not None or cue_unfinished
+                    or read_pending_obligations(connection, session_id)):
                 raise conflict('session_busy', 'playout must finish before closing the session')
             connection.execute(
                 'UPDATE sessions SET status = ? WHERE session_id = ?', ('closed', session_id)

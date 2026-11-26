@@ -9,6 +9,7 @@ from air.local_ident import ident
 from air.playout import tick
 from catalog.recordings import record
 from catalog.releases import release
+from desk.cue_admin import arm_cue, choose_cue
 from desk.previews import preview
 from desk.receipts import lookup
 from desk.submission import AirLink, submit
@@ -29,6 +30,8 @@ def make_handler(database, link=None):
         '/record': partial(record, database),
         '/release': partial(release, database),
         '/open': partial(open_program, database),
+        '/cue/arm': partial(arm_cue, database),
+        '/cue/choose': partial(choose_cue, database),
         '/preview': partial(preview, database),
         '/submit': partial(submit, database, link),
         '/lookup': partial(lookup, database, link),

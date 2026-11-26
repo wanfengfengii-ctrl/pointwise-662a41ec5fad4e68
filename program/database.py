@@ -74,7 +74,7 @@ SCHEMA = (
            session_id INTEGER PRIMARY KEY REFERENCES sessions(session_id),
            beat INTEGER NOT NULL CHECK (beat >= 0),
            active_asset_id INTEGER,
-           source TEXT CHECK (source IN ('promise', 'ident')),
+           source TEXT CHECK (source IN ('promise', 'ident', 'cue')),
            request_id TEXT,
            frame_index INTEGER,
            FOREIGN KEY (session_id, active_asset_id)
@@ -125,10 +125,33 @@ SCHEMA = (
            FOREIGN KEY (session_id, release_id) REFERENCES assets(session_id, release_id),
            CHECK ((source = 'background' AND background_id IS NOT NULL AND release_id IS NULL
                        AND frame_index IS NULL AND sample IS NULL AND request_id IS NULL)
-               OR (source IN ('ident', 'promise') AND background_id IS NULL AND release_id IS NOT NULL
+               OR (source IN ('ident', 'promise', 'cue') AND background_id IS NULL AND release_id IS NOT NULL
                        AND frame_index IS NOT NULL AND frame_index >= 0
                        AND sample IS NOT NULL AND request_id IS NOT NULL))
        )''',
+    '''CREATE TABLE IF NOT EXISTS cue_arms (
+           session_id INTEGER NOT NULL REFERENCES sessions(session_id),
+           cue_id TEXT NOT NULL,
+           reveal_beat TEXT NOT NULL,
+           connected_asset_id INTEGER NOT NULL,
+           connected_start TEXT NOT NULL,
+           connected_end TEXT NOT NULL,
+           connected_duration INTEGER NOT NULL CHECK (connected_duration > 0),
+           disconnected_asset_id INTEGER NOT NULL,
+           disconnected_start TEXT NOT NULL,
+           disconnected_end TEXT NOT NULL,
+           disconnected_duration INTEGER NOT NULL CHECK (disconnected_duration > 0),
+           arm_status TEXT NOT NULL CHECK (arm_status IN ('armed', 'unschedulable')),
+           chosen_result TEXT CHECK (chosen_result IN ('connected', 'disconnected')),
+           fulfilled INTEGER NOT NULL DEFAULT 0 CHECK (fulfilled IN (0, 1)),
+           PRIMARY KEY (session_id, cue_id),
+           FOREIGN KEY (session_id, connected_asset_id)
+               REFERENCES assets(session_id, release_id),
+           FOREIGN KEY (session_id, disconnected_asset_id)
+               REFERENCES assets(session_id, release_id)
+       )''',
+    '''CREATE UNIQUE INDEX IF NOT EXISTS cue_one_armed_per_session
+           ON cue_arms(session_id) WHERE arm_status = 'armed' ''',
     '''CREATE TABLE IF NOT EXISTS shift_reports (
            report_id INTEGER PRIMARY KEY REFERENCES sessions(session_id),
            payload TEXT NOT NULL

@@ -4,6 +4,6 @@
   "setup": [],
   "start": ["python3", "-B", "-m", "program.http_api", "--db", "radio.sqlite3", "--host", "${POINTWISE_HOST}", "--port", "${POINTWISE_PORT}"],
   "readiness_path": "/healthz",
-  "verify": ["python3", "-B", "check_project.py"],
-  "demo": ["python3", "-B", "incident.py"]
+  "verify": ["python3", "-B", "cue_scenarios.py", "verify"],
+  "demo": ["python3", "-B", "cue_scenarios.py", "demo"]
 }
